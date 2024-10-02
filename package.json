@@ -1,0 +1,13 @@
+{
+  "name": "pkgbuild",
+  "version": "1.0.0",
+  "main": "./lib/pkgbuild.webpack.js",
+  "author": "obfuscatedgenerated",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "extra-watch-webpack-plugin": "^1.0.3",
+    "ts-loader": "^9.5.1",
+    "webpack": "^5.95.0"
+  }
+}
