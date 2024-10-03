@@ -10,9 +10,49 @@ If you wish to instead only write JavaScript, write directly to the output file 
 
 ## Building with the OllieOS system
 
-The system is set up automatically to use the version from the package.json file and a README file if found. View [webpack.config.js](webpack.config.js) to configure the programs emitted by the system.
+`npm i --save-dev obfuscatedgenerated/ollieos_pkgbuild webpack-cli`
 
-The project may be built using `npm run build`. The output will be in the `dist` directory. Source maps are emitted to the `maps` directory.
+Now import pkgbuild into your webpack.config.js and set up your package.
+
+Example:
+
+```js
+/* eslint-env node */
+/* eslint-disable @typescript-eslint/no-var-requires */
+
+const pkgbuild = require("ollieos_pkgbuild");
+
+// EDIT THIS OBJECT TO ADD MORE PROGRAMS OR CHANGE THE FILE PATHS/NAMES
+// key: the name of the program
+// value: the path to the entry point
+const programs = {
+    "hwpkg": "./src/index.ts",
+    // "hwpkg2": "./src/index.ts",
+};
+
+// EDIT THIS ARRAY TO ADD DEPENDENCIES FOR THE VERSION CURRENTLY BEING BUILT
+// format: name@version
+const deps = [];
+
+// EDIT THIS TO CHANGE THE HOMEPAGE URL
+const homepage_url = "https://ollieg.codes";
+
+
+// EDIT THIS OBJECT TO DEFINE ADDITIONAL WEBPACK EXTERNALS
+// key: the name of the module
+// value: the external name
+const externals = {};
+
+module.exports = pkgbuild(programs, deps, homepage_url, externals);
+```
+
+Build with `npx webpack --mode=production`.
+
+The system is set up automatically to use the version from the package.json file and a README file if found.
+
+If you require more customised behaviour, you can pass export your own webpack configuration object, but ensure you add the hooks as plugins (import them from the pkgbuild module).
+You will also need to ensure your programs are only ever bundled as their own single files. It is also a good idea to bind to any xterm packages as externals to prevent them from being bundled unnecessarily.
+
 
 ## Completing the package
 
