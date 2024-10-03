@@ -1,5 +1,5 @@
 {
-  "name": "pkgbuild",
+  "name": "ollieos_pkgbuild",
   "version": "1.0.0",
   "private": true,
   "main": "./lib/pkgbuild.webpack.js",
