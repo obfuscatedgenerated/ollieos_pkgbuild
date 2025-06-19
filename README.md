@@ -1,5 +1,7 @@
 # OllieOS Package Build System (pkgbuild)
 
+[Click here for a template package!](https://github.com/obfuscatedgenerated/ollieos_test_pkg)
+
 As of current, packages can only be programs (as opposed to libraries). They are installed to the system's `usr/bin` directory and are run from the command line. They are not imported into other programs. (Note: the built in programs are not found in this directory as they are built into the system itself. They are not packages.)
 
 The OllieOS system to build against is installed through npm using the website's git repo. Webpack and Typescript are used to build the package. OllieOS is declared external to avoid bundling it with the package, but allowing it to be imported.
