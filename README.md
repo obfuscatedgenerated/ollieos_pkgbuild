@@ -157,3 +157,16 @@ pkg add dev
 ```
 
 You can then mount this program with `mount hwpkg-hwpkg-1.0.0.js` to make it available as a command until the system is restarted.
+
+
+Your package.json scripts will probably end up something like this:
+
+```json
+"scripts": {
+  "build": "webpack --mode=production", 
+  "watch": "webpack --watch --mode=development", 
+  "dev": "concurrently \"npm:watch\" \"npx ollieos-pkg-serve\""
+},
+```
+
+(Of course remembering to install the dev dependencies with `npm i --save-dev concurrently webpack-cli https://github.com/obfuscatedgenerated/obfuscatedgenerated.github.io#types https://github.com/obfuscatedgenerated/ollieos_pkgbuild` first.)

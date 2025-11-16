@@ -46,7 +46,7 @@ const server = http.createServer((req, res) => {
                 res.end(`500 Internal Server Error: ${error.code}`, "utf-8");
             }
         } else {
-            res.writeHead(200, { "Content-Type": content_type });
+            res.writeHead(200, { "Content-Type": content_type, "Access-Control-Allow-Origin": "*" });
             res.end(content, "utf-8");
         }
     });
