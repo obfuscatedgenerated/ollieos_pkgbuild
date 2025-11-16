@@ -159,7 +159,7 @@ pkg add dev
 You can then mount this program with `mount ./hwpkg.js` to make it available as a command until the system is restarted.
 
 
-Your package.json scripts will probably end up something like this:
+Your package.json scripts will probably end up something like this, where you can use `npm run dev` to both automaticlaly rebuild and serve the package:
 
 ```json
 "scripts": {
