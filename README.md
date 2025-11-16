@@ -148,7 +148,7 @@ npx ollieos-pkg-serve
 
 This will update in real time. You can then use `webget` to copy the individual program files to OllieOS.
 
-For example, `webget http://localhost:3006/1.0.0/hwpkg-hwpkg-1.0.0.js` to download the hwpkg program to the system.
+For example, `webget http://localhost:3006/1.0.0/hwpkg-hwpkg-1.0.0.js ./hwpkg.js` to download the hwpkg program to the system.
 
 Now, install the dev tool group if you haven't already:
 
@@ -156,7 +156,7 @@ Now, install the dev tool group if you haven't already:
 pkg add dev
 ```
 
-You can then mount this program with `mount hwpkg-hwpkg-1.0.0.js` to make it available as a command until the system is restarted.
+You can then mount this program with `mount ./hwpkg.js` to make it available as a command until the system is restarted.
 
 
 Your package.json scripts will probably end up something like this:
