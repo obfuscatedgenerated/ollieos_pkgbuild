@@ -12,6 +12,6 @@
     "webpack": "^5.95.0"
   },
   "bin": {
-    "serve": "./bin/serve.js"
+    "ollieos-pkg-serve": "./bin/serve.js"
   }
 }

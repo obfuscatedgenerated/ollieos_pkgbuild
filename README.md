@@ -131,3 +131,27 @@ It can be removed using the following command (example):
 ```
 pkg remove hwpkg
 ```
+
+## Getting developed programs into OllieOS
+
+Right now there is no proper method for testing or installing developed packages into OllieOS before publishing them to the package repo.
+
+However, included in this package is a simple script to serve the contents of your dist directory over HTTP.
+
+To use it, run the following command from the root of your package project (where the dist directory is):
+
+```
+npx ollieos-pkg-serve
+```
+
+This will update in real time. You can then use `webget` to copy the individual program files to OllieOS.
+
+For example, `webget http://localhost:3006/1.0.0/hwpkg-hwpkg-1.0.0.js` to download the hwpkg program to the system.
+
+Now, install the dev tool group if you haven't already:
+
+```
+pkg add dev
+```
+
+You can then mount this program with `mount hwpkg-hwpkg-1.0.0.js` to make it available as a command until the system is restarted.
