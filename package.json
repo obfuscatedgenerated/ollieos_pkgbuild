@@ -10,5 +10,8 @@
     "extra-watch-webpack-plugin": "^1.0.3",
     "ts-loader": "^9.5.1",
     "webpack": "^5.95.0"
+  },
+  "bin": {
+    "serve": "./bin/serve.js"
   }
 }
