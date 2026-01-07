@@ -6,11 +6,13 @@ As of current, packages can only be programs (as opposed to libraries). They are
 
 The OllieOS system to build against is installed through npm using the website's git repo. Webpack and Typescript are used to build the package. OllieOS is declared external to avoid bundling it with the package, but allowing it to be imported.
 
-Each program should be 1 file.
+Each program should be bundled to 1 file.
 
 If you wish to instead only write JavaScript, write directly to the output file instead and jump to the [Completing the package](#completing-the-package) section.
 
 ## Building with the OllieOS system
+
+If you are using the template package, you can ignore this section. You just need to use `npm run build` to build the package.
 
 `npm i --save-dev obfuscatedgenerated/ollieos_pkgbuild webpack-cli`
 
