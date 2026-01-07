@@ -47,7 +47,15 @@ const homepage_url = "https://ollieg.codes";
 // value: the external name
 const externals = {};
 
-module.exports = pkgbuild(programs, deps, homepage_url, externals);
+// EDIT THIS OBJECT TO DEFINE TRIGGERS TO RUN ON INSTALL/REMOVAL
+// key: the name of the trigger
+// value: any data to pass to the trigger
+const triggers = {
+    // "create_trigger": "trigger-program",
+    // "register_service": service_data,
+};
+
+module.exports = pkgbuild(programs, deps, homepage_url, externals, triggers);
 ```
 
 Build with `npx webpack --mode=production`.
@@ -110,6 +118,7 @@ The meta.json file provides vital information about the version of the package s
   ],
   "version": "1.0.0",
   "deps": [],
+  "triggers": {},
   "build_timestamp": 1727478000908
 }
 ```
