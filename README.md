@@ -4,7 +4,7 @@
 
 As of current, packages can only be programs (as opposed to libraries). They are installed to the system's `usr/bin` directory and are run from the command line. They are not imported into other programs. (Note: the built in programs are not found in this directory as they are built into the system itself. They are not packages.)
 
-The OllieOS system to build against is installed through npm using the website's git repo. Webpack and Typescript are used to build the package. OllieOS is declared external to avoid bundling it with the package, but allowing it to be imported.
+The type interfaces of the OllieOS system to build against are installed through npm using the website's git repo. Types are automatically generated into the types branch on every push to main, so new types may appear before the new OS is published to the web. Webpack and Typescript are used to build the package.
 
 Each program should be bundled to 1 file.
 
@@ -161,7 +161,7 @@ pkg add dev
 You can then mount this program with `mount ./hwpkg.js` to make it available as a command until the system is restarted.
 
 
-Your package.json scripts will probably end up something like this:
+Your package.json scripts will probably end up something like this, where you can use `npm run dev` to both automatically rebuild and serve the package:
 
 ```json
 "scripts": {
