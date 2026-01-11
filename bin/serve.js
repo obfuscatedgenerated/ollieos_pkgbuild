@@ -4,6 +4,8 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
+const ws = require("ws");
+
 const port = process.argv[2] || 3006;
 const dist_dir = path.resolve(process.cwd(), "dist");
 
@@ -31,6 +33,20 @@ const mimes = {
 };
 
 const server = http.createServer((req, res) => {
+    // if the request is for /list, return array of files in dist directory
+    if (req.url === "/list") {
+        fs.readdir(dist_dir, (err, files) => {
+            if (err) {
+                res.writeHead(500, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({ error: "Unable to read dist directory" }));
+                return;
+            }
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify(files));
+        });
+        return;
+    }
+
     let file_path = path.join(dist_dir, req.url === "/" ? "/index.html" : req.url);
     const extname = String(path.extname(file_path)).toLowerCase();
 
@@ -52,6 +68,30 @@ const server = http.createServer((req, res) => {
     });
 });
 
+
+const wss = new ws.Server({ server });
+
+// watch the dist directory for changes and notify all connected websocket clients
+fs.watch(dist_dir, { recursive: true }, (event, file) => {
+    // determine if this is a new file, a rename, a modification, or a deletion
+    let file_path = path.join(dist_dir, file);
+    if (event === "rename") {
+        if (fs.existsSync(file_path)) {
+            event = "added";
+        } else {
+            event = "deleted";
+        }
+    } else {
+        event = "modified";
+    }
+
+    wss.clients.forEach((client) => {
+        if (client.readyState === ws.OPEN) {
+            client.send(JSON.stringify({ event, file }));
+        }
+    });
+});
+
 server.listen(port, () => {
-    console.log(`Package dist served at http://localhost:${port}/`);
+    console.log(`Package dist served at http://localhost:${port}/ (with WebSocket support)`);
 });
