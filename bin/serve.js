@@ -32,18 +32,37 @@ const mimes = {
     ".wasm": "application/wasm"
 };
 
+const read_dir_recursive = (dir) => {
+    let results = [];
+    const list = fs.readdirSync(dir);
+    list.forEach((file) => {
+        file = path.join(dir, file);
+        const stat = fs.statSync(file);
+        if (stat && stat.isDirectory()) {
+            results = results.concat(read_dir_recursive(file));
+        } else {
+            results.push(path.relative(dist_dir, file));
+        }
+    });
+
+    return results;
+}
+
 const server = http.createServer((req, res) => {
     // if the request is for /list, return array of files in dist directory
     if (req.url === "/list") {
-        fs.readdir(dist_dir, (err, files) => {
-            if (err) {
-                res.writeHead(500, { "Content-Type": "application/json" });
-                res.end(JSON.stringify({ error: "Unable to read dist directory" }));
-                return;
-            }
-            res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
-            res.end(JSON.stringify(files));
-        });
+        let files;
+
+        try {
+            files = read_dir_recursive(dist_dir);
+        } catch (err) {
+            res.writeHead(500, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Unable to read dist directory" }));
+            return;
+        }
+
+        res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+        res.end(JSON.stringify(files));
         return;
     }
 
