@@ -92,8 +92,14 @@ const wss = new ws.Server({ server });
 
 // watch the dist directory for changes and notify all connected websocket clients
 fs.watch(dist_dir, { recursive: true }, (event, file) => {
-    // determine if this is a new file, a rename, a modification, or a deletion
     let file_path = path.join(dist_dir, file);
+
+    // if this is a directory, ignore it
+    if (fs.existsSync(file_path) && fs.lstatSync(file_path).isDirectory()) {
+        return;
+    }
+
+    // determine if this is a new file, a rename, a modification, or a deletion
     if (event === "rename") {
         if (fs.existsSync(file_path)) {
             event = "added";
@@ -106,7 +112,7 @@ fs.watch(dist_dir, { recursive: true }, (event, file) => {
 
     wss.clients.forEach((client) => {
         if (client.readyState === ws.OPEN) {
-            client.send(JSON.stringify({ event, file }));
+            client.send(JSON.stringify({ event, file: file.replace(/\\/g, "/") }));
         }
     });
 });
