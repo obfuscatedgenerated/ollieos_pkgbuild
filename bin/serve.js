@@ -41,7 +41,7 @@ const server = http.createServer((req, res) => {
                 res.end(JSON.stringify({ error: "Unable to read dist directory" }));
                 return;
             }
-            res.writeHead(200, { "Content-Type": "application/json" });
+            res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
             res.end(JSON.stringify(files));
         });
         return;
