@@ -41,7 +41,7 @@ const read_dir_recursive = (dir) => {
         if (stat && stat.isDirectory()) {
             results = results.concat(read_dir_recursive(file));
         } else {
-            results.push(path.relative(dist_dir, file));
+            results.push(path.relative(dist_dir, file).replace(/\\/g, "/"));
         }
     });
 
