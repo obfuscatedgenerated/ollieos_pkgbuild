@@ -2,11 +2,11 @@
 
 [Click here for a template package!](https://github.com/obfuscatedgenerated/ollieos_test_pkg)
 
-As of current, packages can only be programs (as opposed to libraries). They are installed to the system's `usr/bin` directory and are run from the command line. They are not imported into other programs. (Note: the built in programs are not found in this directory as they are built into the system itself. They are not packages.)
+As of current, packages can only be programs (as opposed to libraries). They are installed to the system's `/usr/bin` directory and are run from the command line. They are not imported into other programs. (Note: the built in programs are found in `/bin` instead, as they are built into the system itself. They are not packages.)
 
 The type interfaces of the OllieOS system to build against are installed through npm using the website's git repo. Types are automatically generated into the types branch on every push to main, so new types may appear before the new OS is published to the web. Webpack and Typescript are used to build the package.
 
-Each program should be bundled to 1 file.
+Each program should be bundled to 1 file. Userspace programs run isolated (in a worker, or a sandboxed frame if they set `needs_dom`), so they should bundle everything they depend on. Programs should also set `compat: "3.0.0"`, as OllieOS 3 won't run programs written for an older major version.
 
 If you wish to instead only write JavaScript, write directly to the output file instead and jump to the [Completing the package](#completing-the-package) section.
 
@@ -14,7 +14,7 @@ If you wish to instead only write JavaScript, write directly to the output file 
 
 If you are using the template package, you can ignore this section. You just need to use `npm run build` to build the package.
 
-`npm i --save-dev obfuscatedgenerated/ollieos_pkgbuild webpack-cli`
+`npm i --save-dev obfuscatedgenerated/ollieos_pkgbuild webpack-cli typescript@5`
 
 Now import pkgbuild into your webpack.config.js and set up your package.
 
@@ -27,11 +27,12 @@ Example:
 const pkgbuild = require("ollieos_pkgbuild");
 
 // EDIT THIS OBJECT TO ADD MORE PROGRAMS OR CHANGE THE FILE PATHS/NAMES
-// key: the name of the program
-// value: the path to the entry point
+// key: the name of the program (must match the name in the program's metadata)
+// value: the path to the entry point, or an object with the entry point and the program's metadata (see below)
 const programs = {
     "hwpkg": "./src/index.ts",
     // "hwpkg2": "./src/index.ts",
+    // "hwpkg3": {entry: "./src/hwpkg3.ts", metadata: {name: "hwpkg3", description: "...", usage_suffix: "", arg_descriptions: {}, compat: "3.0.0"}},
 };
 
 // EDIT THIS ARRAY TO ADD DEPENDENCIES FOR THE VERSION CURRENTLY BEING BUILT
@@ -69,8 +70,14 @@ Build with `npx webpack --mode=production`.
 
 The system is set up automatically to use the version from the package.json file and a README file if found.
 
-If you require more customised behaviour, you can pass export your own webpack configuration object, but ensure you add the hooks as plugins (import them from the pkgbuild module).
-You will also need to ensure your programs are only ever bundled as their own single files. It is also a good idea to bind to any xterm packages as externals to prevent them from being bundled unnecessarily.
+Each program's metadata (everything in its default export except `main` and `completion`) is read from the built program and written alongside it as `<program>.json`. To do this, the built program is imported in Node, so any code outside of the program's functions will run at build time. If your program needs to do work outside of program scope (e.g. touching `document` when it loads), the build will fail. In that case, provide the metadata yourself by passing an object with `entry` and `metadata` instead of a path, as with `hwpkg3` above. It's still a good idea to keep work inside your functions where you can, as the program is loaded again for every completion and thread it runs.
+
+Additional files are installed to `/usr/lib/<package name>`, keeping their pkg paths. Programs are found by their top level `.js` files, so an additional file can't be a top level `.js` file, or a `.json` file named after one of your programs. Put these in a subdirectory instead (e.g. `pkg_path: "lib/helper.js"`).
+
+There are no built in externals other than `ollieos` (which only provides types). Externals you define yourself are only available to kernelspace programs, as nothing provides them inside an isolated program.
+
+If you require more customised behaviour, you can pass export your own webpack configuration object, but ensure you add the hooks as plugins (import them from the pkgbuild module). Note that `write_program_metadata` is asynchronous, so it must be tapped with `tapPromise` on `afterEmit`.
+You will also need to ensure your programs are only ever bundled as their own single files, named after the program.
 
 
 ## Completing the package
@@ -80,7 +87,7 @@ Once you have the final script ready to be published, you should then write the 
 ```json
 {
     "latest_version": "1.0.0",
-    "latest_timestamp": 1689109292,
+    "latest_timestamp": 1689109292000,
     "type": "program",
     "description": "A simple example package for OllieOS",
     "author": "obfuscatedgenerated",
@@ -93,7 +100,7 @@ Once you have the final script ready to be published, you should then write the 
 
 The type field exists only for forwards compatibility and should always be set to "program" for now.
 
-The latest_timestamp field is the time the package was built, in seconds since the Unix epoch.
+The latest_timestamp field is the time the package was built, in milliseconds since the Unix epoch.
 
 ---
 
@@ -107,26 +114,29 @@ pkgs/
         pkg.json
         1.0.0/
             meta.json
-            hwpkg-hwpkg-1.0.0.js
+            hwpkg.js
+            hwpkg.json
 ```
 
 The `dist` directory generated by the build system is the entire directory in the repo for the package (e.g. dist -> pkgs/hwpkg/).
 
-Each file in the directory is a program. The convention for naming each script file is `packagename-programname-version.js`. For example, the directory structure indicates a program named `hwpkg` in a package named `hwpkg`. If it was named `hwpkg-test-1.0.0.js`, it indicates a program named `test` in the package. These are purely conventions but should be followed for consistency. The OS will still load any file in the directory as a program (provided it is listed in the meta.json file), using the program names and other data defined in each source file.
+Each program is a pair of files at the top level of the version directory: `programname.js` and `programname.json`. For example, the directory structure indicates a program named `hwpkg` in a package named `hwpkg`. If it also contained `test.js` and `test.json`, it would indicate a program named `test` in the package. The file names must match the program names, as the OS looks programs up by name. The `.json` file is the program's metadata (its default export, without `main` and `completion`), and its `name` must match the file name.
 
-**Every package file should be in the same directory (the version number). It is recommended that nothing else should be in this directory except the meta.json file.**
+**Programs must be at the top level of the version directory, along with the meta.json file. A top level `.js` file without a matching `.json` file is treated as an old style package and will be refused.** Any other files (such as additional files) may be placed in subdirectories, and are installed to `/usr/lib/<package name>`, keeping their paths. The names `pkg`, `meta` and `programs` are reserved and can't be used for programs.
 
-The meta.json file provides vital information about the version of the package such as a file listing and dependencies. It is automatically generated by the build system. This file is used to download each file specified. Every file will be downloaded into the same directory, so if you do end up using multiple directories, you should ensure that the filenames are unique. The deps field is an array of dependencies for the package. Each entry should be in the format `name@version`. Example:
+The meta.json file provides vital information about the version of the package such as a file listing and dependencies. It is automatically generated by the build system. This file is used to download each file specified. The deps field is an array of dependencies for the package. Each entry should be in the format `name@version`. The externals field must be set to `"global"`, or the package will be refused. Example:
 
 ```json
 {
   "files": [
-    "hwpkg-hwpkg-1.0.0.js"
+    "hwpkg.js",
+    "hwpkg.json"
   ],
   "version": "1.0.0",
   "deps": [],
   "triggers": {},
-  "build_timestamp": 1727478000908
+  "build_timestamp": 1727478000908,
+  "externals": "global"
 }
 ```
 
@@ -172,7 +182,7 @@ Your package.json scripts will probably end up something like this, where you ca
 },
 ```
 
-(Of course remembering to install the dev dependencies with `npm i --save-dev concurrently webpack-cli https://github.com/obfuscatedgenerated/obfuscatedgenerated.github.io#types https://github.com/obfuscatedgenerated/ollieos_pkgbuild` first.)
+(Of course remembering to install the dev dependencies with `npm i --save-dev concurrently webpack-cli typescript@5 https://github.com/obfuscatedgenerated/obfuscatedgenerated.github.io#types https://github.com/obfuscatedgenerated/ollieos_pkgbuild` first.)
 
 This then gives you 2 options to get the files into OllieOS for testing:
 
@@ -184,26 +194,18 @@ First, install the dev tool group if you haven't already:
 pkg add dev
 ```
 
-Now you can run the `live-pkg` command to automatically download and update the package files whenever they change:
+Now, from the directory you want to test in, you can run the `live-pkg` command to automatically download and update the package files whenever they change:
 
 ```
 live-pkg
 ```
 
-Then you simply run the program as normal. The program will sync changes to a temporary package directory and run from there, updating whenever the files change.
-
-It will also attempt to automatically mount the program JavaScript files on each change, so you don't need to manually remount them.
+The files are synced into your current directory, updating whenever they change. Then you simply run the program by its relative path.
 
 ### Option 2 - manual download with webget
 
-This will update in real time. You can then use `webget` to copy the individual program files to OllieOS.
+The served files will update in real time. You can then use `webget` to copy the program files to OllieOS. Remember that each program needs both its `.js` and `.json` file.
 
-For example, `webget http://localhost:3006/1.0.0/hwpkg-hwpkg-1.0.0.js ./hwpkg.js` to download the hwpkg program to the system.
+For example, `webget http://localhost:3006/1.0.0/hwpkg.js ./hwpkg.js` and `webget http://localhost:3006/1.0.0/hwpkg.json ./hwpkg.json` to download the hwpkg program to the system.
 
-Now, install the dev tool group if you haven't already:
-
-```
-pkg add dev
-```
-
-You can then mount this program with `mount ./hwpkg.js` to make it available as a command until the system is restarted.
+You can then run the program by its relative path.
