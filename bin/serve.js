@@ -66,6 +66,23 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // if the request is for /name, return the package's name, so tools like live-pkg can put files where an install would
+    if (req.url === "/name") {
+        let package_name;
+
+        try {
+            package_name = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf8")).name;
+        } catch (err) {
+            res.writeHead(500, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Unable to read package.json" }));
+            return;
+        }
+
+        res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+        res.end(JSON.stringify(package_name));
+        return;
+    }
+
     let file_path = path.join(dist_dir, req.url === "/" ? "/index.html" : req.url);
     const extname = String(path.extname(file_path)).toLowerCase();
 
